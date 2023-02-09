@@ -5,7 +5,7 @@ from flask_cors import CORS,cross_origin
 from urllib.request import urlopen as uReq
 from bs4 import BeautifulSoup as bs
 import requests
-
+import csv
 app=Flask(__name__)
 CORS(app)
 
@@ -26,7 +26,7 @@ def main():
 @cross_origin()
 def index():
     if request.method == 'POST':
-        # try:
+        try:
             searchString = request.form['content'].replace(" ","")
             flipkart_url = "https://www.flipkart.com/search?q=" + searchString
             uClient = uReq(flipkart_url)
@@ -43,12 +43,14 @@ def index():
             # print(prod_html)
             commentboxes = prod_html.find_all('div', {'class': "_16PBlm"})
 
-            filename = searchString + ".csv"
-            fw = open(filename, "w")
-            headers = "Product, Customer Name, Rating, Heading, Comment \n"
-            fw.write(headers)
+            # filename = searchString + ".csv"
+            # fw = open(filename, "w")
+            # headers = ['Product', 'Customer Name', 'Rating', 'Heading','Comment']
+
+            # fw.write(headers)
             reviews = []
             for commentbox in commentboxes:
+                # print(commentbox)
                 try:
                     #name.encode(encoding='utf-8')
                     name = commentbox.div.div.find_all('p', {'class': '_2sc7ZR _2V5EHH'})[0].text
@@ -75,15 +77,27 @@ def index():
                     #custComment.encode(encoding='utf-8')
                     custComment = comtag[0].div.text
                 except Exception as e:
+                    comtag = 'No Comment Tag'
+
                     print("Exception while creating dictionary: ",e)
 
                 mydict = {"Product": searchString, "Name": name, "Rating": rating, "CommentHead": commentHead,
                           "Comment": custComment}
                 reviews.append(mydict)
+                header = ['Product', 'Customer Name', 'Rating', 'Heading','Comment']
+                data = [searchString, name,rating, commentHead,custComment]
+                with open(searchString+'.csv', 'w', encoding='UTF8', newline='') as f:
+                    writer = csv.writer(f)
+
+                    # write the header
+                    writer.writerow(header)
+
+                    # write the data
+                    writer.writerow(data)
             return render_template('results.html', reviews=reviews[0:(len(reviews)-1)])
-        # except Exception as e:
-        #     print('The Exception message is: ',e)
-        #     return 'something is wrong'
+        except Exception as e:
+            print('The Exception message is: ',e)
+            return 'something is wrong'
     else:
         return render_template('index.html')
 
