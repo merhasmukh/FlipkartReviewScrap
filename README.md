@@ -1,2 +1,2 @@
 # FlipkartReviewScrap
-A Flask web application for flipkart products review 
+A Flask web application for scrap flipkart products review 
